@@ -8,6 +8,15 @@ on:
     branches:
       - main
 
+#  workflow_dispatch:            # Permet d'excuter la ci manuellement
+
+#  schedule:
+#    - cron: "10 14 * * 1-5" # Afternoon 2:10, Monday to Friday
+
+#permissions:
+#  contents:  read               # give read permission to the ci for the repository access
+
+
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true   # Évite les builds inutiles → bonne pratique RSE
@@ -38,8 +47,18 @@ jobs:
         # Installe les dépendances (rapide et reproductible)
 
       - name: Build project (Vite)
-        run: npm run build
-        # Compile ton projet pour la production
+        run: npm run build        # Compile ton projet pour la production
+
+        #  Store Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: madness-portfolio
+#          path: target/*.war
+
+#     Status check functions : by default it's success
+#      - name: Notify if Build Fails
+#        if: failure()
+#        run: echo "Build job failde! Please check logs."
 
 
   Testing:
@@ -75,6 +94,11 @@ jobs:
         # Vérifie l’accessibilité → inclusion utilisateur
 
 
+#      - name: Run tests on other branches
+#        if: github.ref != 'refs/heads/main'     # run only if we are on the main branch
+#        run: echo "Skipping unit tests and code analysis"
+
+
   Performance:
     runs-on: ubuntu-latest
     needs: Build
@@ -98,3 +122,31 @@ jobs:
 #      - name: Run Lighthouse CI
 #        run: lhci autorun
         # Analyse performance, accessibilité, SEO et bonnes pratiques
+
+
+  Security_scan:
+    runs-on: ubuntu-latest
+    needs: Build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          exit-code: 0
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.json'
+
+      #  Store Artifact
+      - name: Upload Trivy scan results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy-results.json
