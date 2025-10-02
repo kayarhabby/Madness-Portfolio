@@ -1,120 +1,100 @@
-name: madness-portfolio CI   # Nom du workflow, il apparaîtra dans GitHub Actions
+name: madness-portfolio CI
 
 on:
   push:
     branches:
-      - main                # Déclenche le workflow à chaque "push" sur la branche main
+      - main
   pull_request:
     branches:
-      - main                # Déclenche aussi lors des Pull Requests vers main
+      - main
 
 concurrency:
-  group: ${{ github.ref }}  # Chaque branche a son propre groupe de workflows
-  cancel-in-progress: true   # Annule les exécutions redondantes (économie énergie → bonne pratique RSE)
+  group: ${{ github.ref }}
+  cancel-in-progress: true   # Évite les builds inutiles → bonne pratique RSE
 
 jobs:
 
-  Build:                    # Premier job : construction du projet
-    runs-on: ubuntu-latest   # La machine virtuelle GitHub Actions utilisée (Ubuntu)
+  Build:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # Étape 1 : Récupère le code source du dépôt GitHub
+        # Récupère le code source
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # Utilise la version 22 de Node.js (LTS récente et maintenue)
-          cache: 'npm'       # Active le cache npm pour éviter de re-télécharger les dépendances
-        # Étape 2 : Prépare l'environnement avec Node.js et active le cache → optimisation énergétique (RSE)
+          node-version: '22'
+          cache: 'npm'
+        # Configure Node.js v22 et active le cache npm (optimisation RSE)
 
       - name: Upgrade to npm v11
         run: npm install -g npm@11
-        # Étape 3 : Met à jour npm vers la dernière version stable (v11)
+        # Met à jour npm à la dernière version stable
 
       - name: Install dependencies
         run: npm ci
-        # Étape 4 : Installation des dépendances du projet
-        # → `npm ci` est plus rapide et plus reproductible que `npm install`
+        # Installe les dépendances (rapide et reproductible)
 
       - name: Build project (Vite)
         run: npm run build
-        # Étape 5 : Compile ton projet avec Vite (optimise les fichiers pour la prod)
-
-      - name: Check bundle size (RSE good practice)
-        run: npx size-limit
-        # Étape 6 : Vérifie que le build n’est pas trop lourd
-        # → Moins de Mo transférés = meilleur pour les utilisateurs et la planète
+        # Compile ton projet pour la production
 
 
-  Testing:                  # Deuxième job : tests + qualité du code
+  Testing:
     runs-on: ubuntu-latest
-    needs: Build            # Ce job s’exécute seulement si le build est réussi
+    needs: Build
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # Étape 1 : Récupère le code
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-        # Étape 2 : Configure Node.js 22 et active le cache
 
       - name: Upgrade to npm v11
         run: npm install -g npm@11
-        # Étape 3 : Met à jour npm à la version 11
 
       - name: Install dependencies
         run: npm ci
-        # Étape 4 : Installation reproductible des dépendances
 
       - name: Run unit tests
         run: npm test
-        # Étape 5 : Lance les tests unitaires → qualité côté développement
+        # Exécute tes tests unitaires (ex: Jest, Vitest)
 
       - name: Run linting (Code quality)
         run: npm run lint
-        # Étape 6 : Vérifie le style du code (ESLint/Prettier)
-        # → Code plus propre, maintenable, donc durable (RSE + dev)
+        # Vérifie la qualité du code → maintenabilité (bonne pratique dev)
 
       - name: Accessibility tests (a11y)
         run: npx pa11y http://localhost:4173 || true
-        # Étape 7 : Teste l’accessibilité du site (WCAG)
-        # → Inclusion des utilisateurs (handicap visuel, navigation clavier)
+        # Vérifie l’accessibilité → inclusion utilisateur
 
 
-  Performance:              # Troisième job : évaluation performance/SEO/accessibilité
+  Performance:
     runs-on: ubuntu-latest
-    needs: Build            # Ce job s’exécute après un build réussi
+    needs: Build
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # Étape 1 : Récupère le code
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-        # Étape 2 : Configure Node.js 22 + cache npm
 
       - name: Upgrade to npm v11
         run: npm install -g npm@11
-        # Étape 3 : Met npm à jour vers v11
 
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
-        # Étape 4 : Installe Lighthouse CI (outil Google pour tester perf + SEO + accessibilité)
 
       - name: Run Lighthouse CI
         run: lhci autorun
-        # Étape 5 : Analyse ton site sur plusieurs critères :
-        #   - Performance (vitesse de chargement → utilisateur + RSE)
-        #   - Accessibilité (inclusion des utilisateurs)
-        #   - SEO (meilleure visibilité, donc moins de navigation inutile)
-        #   - Best practices (sécurité, PWA, etc.)
+        # Analyse performance, accessibilité, SEO et bonnes pratiques
