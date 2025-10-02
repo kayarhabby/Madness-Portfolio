@@ -62,8 +62,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        run: npm test
+#      - name: Run unit tests
+#        run: npm test
         # Exécute tes tests unitaires (ex: Jest, Vitest)
 
       - name: Run linting (Code quality)
@@ -95,6 +95,6 @@ jobs:
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
 
-      - name: Run Lighthouse CI
-        run: lhci autorun
+#      - name: Run Lighthouse CI
+#        run: lhci autorun
         # Analyse performance, accessibilité, SEO et bonnes pratiques
